@@ -1,0 +1,22 @@
+# idea-signal — LAN-only HTTPS, no router ports, no internet exposure.
+# Backend listens on 127.0.0.1:8123 (loopback). Caddy terminates TLS on the
+# LAN interface and reverse-proxies to it.
+#
+# Phone/laptop (same Wi-Fi): https://192.168.0.205:8443
+# This PC:                   https://localhost:8443
+#
+# Cert is self-signed (tls internal): browsers show a one-time warning.
+# Tap through it, or install the CA below on your phone for zero warnings:
+#   ~/.local/share/caddy/pki/authorities/local/root.crt
+#
+# If this PC's LAN IP changes (DHCP), update the address below and reload:
+#   systemctl --user reload caddy  (or: caddy reload --config Caddyfile)
+{
+	admin off
+	auto_https disable_redirects
+}
+
+https://192.168.0.205:8443, https://localhost:8443 {
+	tls internal
+	reverse_proxy 127.0.0.1:8123
+}

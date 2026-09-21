@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Signal Ideas — project idea board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/canvas.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="brand">Signal Ideas</span>
+  </div>
+  <div class="topbar-right">
+    <button id="btn-export" class="ghost" title="Export all projects as JSON">Export</button>
+    <button id="btn-import" class="ghost" title="Import JSON">Import</button>
+    <input type="file" id="import-file" accept="application/json" class="sr-only" />
+  </div>
+</header>
+
+<!-- ============ DASHBOARD ============ -->
+<main id="view-dashboard" class="wrap">
+  <section class="hero">
+    <div>
+      <div class="sig-0" id="hero-kicker">Projects</div>
+      <h1 class="page-title"><span id="project-count">0</span> projects</h1>
+      <p class="hero-sub">Give each idea a place to live, instead of random paper.</p>
+    </div>
+    <div class="hero-meta">
+      <span class="hero-stat" id="hero-total-objects">0 objects</span>
+    </div>
+  </section>
+
+  <section class="controls">
+    <input type="text" id="search" class="search" placeholder="Filter projects…" aria-label="Filter projects" />
+    <div class="spacer"></div>
+    <button id="btn-new" class="primary">New project</button>
+  </section>
+
+  <section id="project-grid" class="pgrid" aria-live="polite"></section>
+
+  <div id="empty-state" class="empty" hidden>
+    <h2>No projects yet</h2>
+    <p>Give the first idea a name — the canvas will be waiting.</p>
+    <button id="btn-new-2" class="primary">New project</button>
+  </div>
+</main>
+
+<!-- ============ CANVAS ============ -->
+<main id="view-canvas" class="wrap">
+  <div class="crumb">
+    <button id="btn-back" class="ghost">← All projects</button>
+    <span class="crumb-name" id="canvas-title">Untitled</span>
+    <span class="sig-0" id="canvas-save-state">Saved</span>
+  </div>
+
+  <div class="mtabs" role="tablist" aria-label="Canvas panels">
+    <button data-mtab="canvas" aria-pressed="true" role="tab">Canvas</button>
+    <button data-mtab="layers" aria-pressed="false" role="tab">Layers&nbsp;<span id="mtab-layer-count">0</span></button>
+    <button data-mtab="inspect" aria-pressed="false" role="tab">Inspect</button>
+  </div>
+
+  <div class="toolbar" role="toolbar" aria-label="Canvas tools">
+    <button data-tool="select" aria-pressed="true" title="Select / move (V)">Select</button>
+    <button data-tool="pan" aria-pressed="false" title="Pan (H or Space-drag)">Pan</button>
+    <span class="sep"></span>
+    <button data-tool="note" aria-pressed="false" title="Add text note (N)">+ Note</button>
+    <button data-tool="image" aria-pressed="false" title="Add image (I)">+ Image</button>
+    <button data-tool="link" aria-pressed="false" title="Add link embed (L)">+ Link</button>
+    <button data-tool="pdf" aria-pressed="false" title="Add PDF (P)">+ PDF</button>
+    <button data-tool="md" aria-pressed="false" title="Add markdown (M)">+ MD</button>
+    <button data-tool="rect" aria-pressed="false" title="Add section zone (R)">+ Section</button>
+    <button data-tool="connect" aria-pressed="false" title="Connect two items with an arrow (C)">+ Connect</button>
+    <button data-tool="pen" aria-pressed="false" title="Draw freehand (W)">+ Pen</button>
+    <button data-tool="eraser" aria-pressed="false" title="Erase strokes (X)">+ Erase</button>
+    <span class="sep"></span>
+    <button id="btn-fit" class="ghost" title="Reset zoom to 100% at origin">Reset view</button>
+    <button id="btn-focus" class="ghost" title="Hide panels, canvas fills page (F)">Focus</button>
+    <button id="btn-full" class="ghost" title="Browser fullscreen on canvas">Full</button>
+    <span class="hint" id="tool-hint">Pick a + tool, then click the canvas to place it</span>
+  </div>
+
+  <div class="workspace">
+    <aside class="panel panel-layers" data-panel="layers" aria-label="Layers">
+      <div class="panel-head"><span>Layers</span><span id="layer-count">0</span></div>
+      <div class="panel-body" id="layers"></div>
+    </aside>
+
+    <div class="viewport" id="viewport" tabindex="0" aria-label="Infinite canvas">
+      <div class="world" id="world">
+        <div class="grid-dots"></div>
+        <div id="items"></div>
+        <svg id="wires" aria-hidden="true"></svg>
+      </div>
+      <div class="statusbar">
+        <span id="st-coords">X 0 · Y 0</span>
+        <div class="zoom-ctl">
+          <button id="zoom-out">−</button>
+          <span id="st-zoom">100%</span>
+          <button id="zoom-in">+</button>
+        </div>
+        <span id="st-count">0 objects</span>
+        <span id="st-tool">Select</span>
+      </div>
+    </div>
+
+    <aside class="panel panel-inspect" data-panel="inspect" aria-label="Inspector">
+      <div class="panel-head"><span>Inspector</span><span id="insp-kind">—</span></div>
+      <div class="panel-body" id="inspector" style="padding:0"></div>
+    </aside>
+  </div>
+
+  <div class="canvas-hint" id="canvas-hint">Drag the background to pan · Ctrl+scroll to zoom · F for focus · Del removes the selection</div>
+  <div class="canvas-ctl" id="canvas-ctl" aria-label="Canvas position and zoom"></div>
+</main>
+
+<dialog id="dlg-project">
+  <h3 id="dlg-project-title">New project</h3>
+  <label for="proj-label">Name</label>
+  <input type="text" id="proj-label" placeholder="e.g. Solar drone" maxlength="60" />
+  <div class="row">
+    <button id="dlg-project-cancel" class="ghost">Cancel</button>
+    <button id="dlg-project-ok" class="primary">Confirm</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-section">
+  <h3 id="dlg-section-title">New section</h3>
+  <label for="section-label">Name</label>
+  <input type="text" id="section-label" placeholder="e.g. Research" maxlength="60" />
+  <div class="row">
+    <button id="dlg-section-cancel" class="ghost">Cancel</button>
+    <button id="dlg-section-ok" class="primary">Confirm</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-link">
+  <h3>Embed link</h3>
+  <label for="link-url">URL</label>
+  <input type="url" id="link-url" placeholder="https://…" />
+  <label for="link-title">Title (optional — fetched automatically if empty)</label>
+  <input type="text" id="link-title" placeholder="Leave empty for auto preview" maxlength="120" />
+  <div class="row">
+    <button id="dlg-link-cancel" class="ghost">Cancel</button>
+    <button id="dlg-link-ok" class="primary">Place</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-image">
+  <h3>Add image</h3>
+  <label for="img-url">Image URL — or pick a file below</label>
+  <input type="url" id="img-url" placeholder="https://…/shot.png" />
+  <div class="row" style="justify-content:flex-start">
+    <input type="file" id="img-file" accept="image/*" style="background:transparent;padding:0;border:0" />
+  </div>
+  <div class="row">
+    <button id="dlg-image-cancel" class="ghost">Cancel</button>
+    <button id="dlg-image-ok" class="primary">Place</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-pdf">
+  <h3>Add PDF</h3>
+  <label for="pdf-url">PDF URL — or pick a file below (max 100MB)</label>
+  <input type="url" id="pdf-url" placeholder="https://…/doc.pdf" />
+  <div class="row" style="justify-content:flex-start">
+    <input type="file" id="pdf-file" accept="application/pdf,.pdf" style="background:transparent;padding:0;border:0" />
+  </div>
+  <div class="row">
+    <button id="dlg-pdf-cancel" class="ghost">Cancel</button>
+    <button id="dlg-pdf-ok" class="primary">Place</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-md">
+  <h3>Add markdown</h3>
+  <label for="md-text">Markdown — or pick a .md file below</label>
+  <textarea id="md-text" rows="6" placeholder="# Title&#10;&#10;- point&#10;- [ ] todo&#10;&#10;| a | b |&#10;|---|---|"></textarea>
+  <div class="row" style="justify-content:flex-start">
+    <input type="file" id="md-file" accept=".md,.markdown,text/markdown" style="background:transparent;padding:0;border:0" />
+  </div>
+  <div class="row">
+    <button id="dlg-md-cancel" class="ghost">Cancel</button>
+    <button id="dlg-md-ok" class="primary">Place</button>
+  </div>
+</dialog>
+
+<dialog id="preview-modal">
+  <div class="preview-bar">
+    <code id="preview-url"></code>
+    <button id="preview-open" class="primary">Open ↗</button>
+    <button id="preview-close" class="ghost">Close</button>
+  </div>
+  <div class="sig-0" style="padding:0 2px 6px">Live embed — if blank, the site blocks framing. Use Open ↗.</div>
+  <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin allow-popups" title="Link preview"></iframe>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/store.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/embeds.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/canvas.js"></script>
+</body>
+</html>

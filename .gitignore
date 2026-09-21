@@ -1,0 +1,9 @@
+# Uploaded PDF blobs (large, content-addressed, ever-growing)
+files/
+# Live user data (changes on every save; app seeds itself when absent)
+data.json
+# Runtime noise
+__pycache__/
+*.pyc
+*.log
+.DS_Store
