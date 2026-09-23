@@ -23,11 +23,25 @@ body.in-canvas #view-canvas .workspace {
   height: 100vh;
   height: 100dvh;
   min-height: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 body.in-canvas #view-canvas .viewport {
   height: 100%;
+  min-height: 0;
   border: 0;
   border-radius: 0;
+}
+/* Full-page canvas: side panels and mobile tabs stay in the DOM
+   (JS keeps rendering into them) but never display. */
+#view-canvas .mtabs,
+#view-canvas .panel,
+#view-canvas .canvas-hint,
+#btn-focus { display: none !important; }
+#view-canvas .workspace {
+  display: block;
+  height: calc(100vh - 140px);
+  min-height: 480px;
 }
 body.in-canvas #view-canvas .toolbar {
   position: fixed;
@@ -62,13 +76,26 @@ body.in-canvas #view-canvas #btn-back { min-height: 36px; }
 #btn-back:hover { color: var(--text-primary); background: transparent; }
 
 .toolbar {
-  display: flex; gap: var(--space-1); align-items: center; flex-wrap: wrap;
+  display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap;
   background: transparent;
   border: 0;
   border-radius: var(--radius-lg);
   padding: var(--space-1) 0;
   margin: var(--space-2) 0;
 }
+/* Grouped toolbar: mode (segmented) · add · view. Style, not size,
+   separates the primary mode from the rest. */
+.toolbar .tool-group {
+  display: flex; gap: 2px; align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  flex: 0 0 auto;
+}
+.toolbar .tool-group button { border-color: transparent; background: transparent; white-space: nowrap; }
+.toolbar .tool-group button:hover { background: var(--surface-subtle); }
+.toolbar .tool-group button[aria-pressed="true"] { background: var(--accent-soft); }
 .toolbar button { border-color: transparent; background: transparent; }
 .toolbar button:hover { background: var(--surface-subtle); }
 .toolbar button[aria-pressed="true"] { background: var(--accent-soft); }
@@ -270,8 +297,8 @@ body.in-canvas #view-canvas #btn-back { min-height: 36px; }
 .md-body .md-empty { color: var(--text-tertiary); }
 
 .link-card img { width: 100%; height: 45%; object-fit: cover; display: block; background: var(--surface-subtle); pointer-events: none; }
-.link-card .lk-t { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); text-transform: uppercase; letter-spacing: 0.04em; padding: var(--space-3) var(--space-3) 2px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.link-card .lk-d { color: var(--text-secondary); font-size: var(--text-sm); line-height: var(--leading-body); padding: 0 var(--space-3); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.link-card .lk-t { font-family: var(--font-body); font-weight: 600; font-size: var(--text-md); line-height: var(--leading-ui); text-transform: none; letter-spacing: 0; padding: var(--space-3) var(--space-3) 2px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.link-card .lk-d { color: var(--text-secondary); font-size: var(--text-sm); line-height: var(--leading-body); padding: 0 var(--space-3); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .link-card .lk-f { margin-top: auto; display: flex; gap: var(--space-1); padding: var(--space-2) var(--space-3); align-items: center; border-top: 1px solid var(--border-subtle); }
 .link-card .lk-f code { flex: 1; font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .link-card.failed .lk-t { color: var(--danger); }
@@ -324,7 +351,7 @@ body.in-canvas #view-canvas #btn-back { min-height: 36px; }
   display: flex; gap: 14px; align-items: center;
   background: var(--surface);
   border: 1px solid var(--border-subtle);
-  color: var(--text-tertiary); font-size: var(--text-xs);
+  color: var(--text-secondary); font-size: var(--text-xs);
   padding: 5px 12px; border-radius: var(--radius-md);
   pointer-events: none; white-space: nowrap;
   overflow: hidden;
@@ -339,7 +366,7 @@ body.in-canvas #view-canvas #btn-back { min-height: 36px; }
 .canvas-hint {
   width: fit-content; max-width: 100%;
   margin: 8px auto 0;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-size: var(--text-xs);
   padding: 5px 12px;
   pointer-events: none; white-space: nowrap;
@@ -349,23 +376,27 @@ body.in-canvas #view-canvas #btn-back { min-height: 36px; }
 /* Below-canvas coords + zoom cluster: populated by JS relocation on mobile only */
 .canvas-ctl { display: none; }
 
-/* Minimal project view: canvas + toolbar + back button only.
-   Layers/Inspector panels, title/save-state, hints, status pill and
-   mobile tabs are hidden. All nodes stay in the DOM so JS keeps working. */
-#view-canvas .workspace { grid-template-columns: 1fr; }
-#view-canvas .panel { display: none; }
-#view-canvas .crumb .crumb-name,
-#view-canvas .crumb .sig-0 { display: none; }
-#view-canvas .viewport > .statusbar { display: none; }
-#view-canvas .canvas-hint { display: none; }
-#view-canvas .canvas-ctl { display: none; }
-#view-canvas .mtabs { display: none; }
-#btn-focus { display: none; }
+/* Inspector popover: the existing #inspector node is relocated here
+   on open (no duplicate IDs); .insp-* styles apply unchanged. */
+#dlg-inspect { width: min(480px, 94vw); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow: auto; }
+#dlg-inspect #inspector-host #inspector { padding: 0; }
+#dlg-inspect .preview-bar { position: sticky; top: 0; background: inherit; z-index: 1; }
+
+/* Project view keeps the three-pane split on wide screens
+   (layers · canvas · inspector). Focus mode is the explicit
+   minimal state; panels are never removed by default. */
 
 @media (max-width: 1000px) {
   .workspace { grid-template-columns: 1fr; height: auto; }
   .viewport { height: 60vh; }
-  .panel { max-height: 260px; }
+  body.in-canvas #view-canvas .workspace {
+    display: block;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
+  }
+  body.in-canvas #view-canvas .viewport { height: 100%; min-height: 0; }
 }
 
 /* Mobile canvas-first: tabs swap canvas / layers / inspector, tools go bottom */
@@ -409,14 +440,7 @@ body.in-canvas #view-canvas #btn-back { min-height: 36px; }
     border-color: transparent;
   }
 
-  /* tab visibility: only one pane at a time */
-  body[data-mtab="layers"] .panel-layers,
-  body[data-mtab="inspect"] .panel-inspect { display: flex; }
-  body[data-mtab="layers"] .viewport,
-  body[data-mtab="inspect"] .viewport,
-  body[data-mtab="layers"] .panel-inspect,
-  body[data-mtab="inspect"] .panel-layers,
-  body[data-mtab="canvas"] .panel { display: none; }
+  /* panel tabs removed: single full-page pane, no per-tab visibility switching */
 
   .workspace {
     grid-template-columns: 1fr;

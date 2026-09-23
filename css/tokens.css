@@ -121,14 +121,16 @@ html, body {
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
   line-height: var(--leading-heading);
   margin: 0;
+  text-wrap: balance;
 }
 
-/* Section kicker — HUD readout label for structure */
+/* Section kicker — small structural label. Uppercase is reserved
+   for this class and the brand only; never for buttons or titles. */
 .sig-0 {
   font-family: var(--font-display);
   color: var(--text-secondary);
@@ -145,7 +147,8 @@ h1, h2, h3, h4 {
   border-radius: var(--radius-sm);
 }
 
-/* Buttons — uppercase labels, technical, not decorative */
+/* Buttons — sentence case, style (not size or casing) signals hierarchy.
+   One prominent action per view; everything else quiet. */
 button, input, textarea, select {
   font-family: var(--font-body);
   font-size: var(--text-sm);
@@ -153,14 +156,15 @@ button, input, textarea, select {
 
 button {
   height: 36px;
+  min-width: 36px;
   padding-inline: 14px;
   background: transparent;
   color: var(--text-primary);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0;
   cursor: pointer;
   transition: background-color var(--duration-fast) ease-out,
     border-color var(--duration-fast) ease-out,
@@ -169,6 +173,7 @@ button {
 }
 
 button:hover { border-color: var(--text-secondary); }
+button:active { transform: translateY(0.5px); opacity: 0.92; }
 
 button.primary {
   background: var(--accent);
@@ -213,7 +218,7 @@ input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent);
 }
-input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
+input::placeholder, textarea::placeholder { color: var(--text-secondary); }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px;

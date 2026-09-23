@@ -78,6 +78,7 @@
   }
 
   function back() {
+    closeInspector();
     store.save(true);
     pid = null;
     viewCanvas.classList.remove("active");
@@ -87,26 +88,17 @@
   }
   document.getElementById("btn-back").addEventListener("click", back);
 
-  /* ---------- mobile tabs: canvas-first, layers/inspect swap the same area ---------- */
+  /* ---------- panel tabs removed: full-page canvas only.
+     setMTab stays as a harmless stub (open() calls it; no tab nodes exist). */
   const coarseMQ = window.matchMedia ? window.matchMedia("(pointer: coarse)") : { matches: false };
   const narrowMQ = window.matchMedia ? window.matchMedia("(max-width: 760px)") : { matches: false };
   function setMTab(name) {
     document.body.dataset.mtab = name;
-    document.querySelectorAll("[data-mtab]").forEach((b) =>
-      b.setAttribute("aria-pressed", b.dataset.mtab === name ? "true" : "false"));
     if (name === "canvas") {
-      // viewport was display:none -> rect changed; re-apply transform + re-render coords
       requestAnimationFrame(() => applyView());
     }
   }
-  document.querySelectorAll("[data-mtab]").forEach((b) =>
-    b.addEventListener("click", () => setMTab(b.dataset.mtab)));
   if (!document.body.dataset.mtab) setMTab("canvas");
-  // touch hint under canvas (desktop string is meaningless on mobile)
-  const canvasHint = document.getElementById("canvas-hint");
-  if (canvasHint && coarseMQ.matches) {
-    canvasHint.textContent = "DRAG BG TO PAN · PINCH TO ZOOM · DOUBLE-TAP TO ZOOM";
-  }
   // orientation / URL-bar resize changes viewport rect -> re-pin transform
   window.addEventListener("resize", () => { if (proj()) applyView(); });
   // iOS Safari takes over two-finger gestures at the page level unless denied
@@ -289,25 +281,13 @@
     const v = view(); v.x = 60; v.y = 40; v.zoom = 1; applyView(); store.save();
   });
 
-  /* focus mode (panels hidden) + native fullscreen on the canvas only */
-  const workspaceEl = document.querySelector(".workspace");
-  function setFocus(on) {
-    workspaceEl.classList.toggle("focus", on);
-    const b = document.getElementById("btn-focus");
-    if (b) { b.textContent = on ? "EXIT FOCUS" : "FOCUS"; b.setAttribute("aria-pressed", on ? "true" : "false"); }
-  }
-  document.getElementById("btn-focus").addEventListener("click", () => {
-    setFocus(!workspaceEl.classList.contains("focus"));
-  });
-  document.getElementById("btn-full").addEventListener("click", async () => {
+  /* native fullscreen on the canvas only (Focus mode removed: canvas is always full-page) */
+  const btnFull = document.getElementById("btn-full");
+  if (btnFull) btnFull.addEventListener("click", async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
       else await viewport.requestFullscreen();
-    } catch { setFocus(true); } // fallback: in-page focus
-  });
-  document.addEventListener("fullscreenchange", () => {
-    if (!document.fullscreenElement) return;
-    setFocus(true); // hide panels while native-fullscreen too
+    } catch {}
   });
 
   /* ---------- items ---------- */
@@ -486,9 +466,8 @@
       try { embeds.pdfRevokeStale(p.items.filter((x) => x.type === "pdf").map((x) => x.id)); } catch {}
     }
     document.getElementById("st-count").textContent = p.items.length + " objects";
-    document.getElementById("layer-count").textContent = p.items.length;
-    const mCount = document.getElementById("mtab-layer-count");
-    if (mCount) mCount.textContent = p.items.length;
+    const layerCount = document.getElementById("layer-count");
+    if (layerCount) layerCount.textContent = p.items.length;
   }
 
   function connLabel(it) {
@@ -537,8 +516,6 @@
         }
         selectedId = it.id;
         renderAll();
-        // on mobile, picking a layer should reveal it on the canvas
-        if (narrowMQ.matches) setMTab("canvas");
       });
       layersEl.appendChild(row);
     });
@@ -547,10 +524,15 @@
   function renderInspector() {
     const p = proj();
     const box = document.getElementById("inspector");
+    if (!box) return;
     const it = p && p.items.find((x) => x.id === selectedId);
-    document.getElementById("insp-kind").textContent = it ? (it.type === "rect" ? "Section" : it.type.charAt(0).toUpperCase() + it.type.slice(1)) : "—";
+    const kind = it ? (it.type === "rect" ? "Section" : it.type.charAt(0).toUpperCase() + it.type.slice(1)) : "—";
+    const kindEl = document.getElementById("insp-kind");
+    if (kindEl) kindEl.textContent = kind;
+    const dlgKind = document.getElementById("dlg-inspect-kind");
+    if (dlgKind) dlgKind.textContent = kind;
     if (!it) {
-      box.innerHTML = `<div class="insp-empty">No selection.<br><br>Pick Select, Pan, or a + tool from the toolbar.<br><br><span class="sig-0">V select · H pan · N/I/L/P/M/R place · C connect · W pen · X erase · F focus · Del delete · Ctrl+D duplicate · arrows nudge</span></div>`;
+      box.innerHTML = `<div class="insp-empty">No selection.<br><br>Pick Select, Pan, or a + tool from the toolbar.<br><br><span class="sig-0">V select · H pan · N/I/L/P/M/R place · C connect · W pen · X erase · Del delete · Ctrl+D duplicate · arrows nudge</span></div>`;
       return;
     }
     const showGeom = it.type !== "connector" && it.type !== "stroke";
@@ -697,6 +679,33 @@
     });
   }
 
+  /* ---------- inspector popover: the docked panels are gone; the full
+     editor lives in #dlg-inspect on demand. The #inspector node is
+     relocated (never cloned) so IDs stay unique and .insp-* CSS applies. */
+  const dlgInspect = document.getElementById("dlg-inspect");
+  const inspectorHost = document.getElementById("inspector-host");
+  const inspectorHome = document.querySelector(".panel-inspect .panel-body");
+  function openInspector() {
+    const box = document.getElementById("inspector");
+    if (!box || !dlgInspect || !inspectorHost) return;
+    renderInspector();
+    if (box.parentElement !== inspectorHost) inspectorHost.appendChild(box);
+    if (!dlgInspect.open) dlgInspect.showModal();
+  }
+  function closeInspector() {
+    if (dlgInspect && dlgInspect.open) dlgInspect.close();
+  }
+  const dlgInspectClose = document.getElementById("dlg-inspect-close");
+  if (dlgInspectClose) dlgInspectClose.addEventListener("click", () => closeInspector());
+  if (dlgInspect) dlgInspect.addEventListener("click", (e) => {
+    const r = dlgInspect.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeInspector();
+  });
+  if (dlgInspect) dlgInspect.addEventListener("close", () => {
+    const box = document.getElementById("inspector");
+    if (box && inspectorHome && box.parentElement !== inspectorHome) inspectorHome.appendChild(box);
+  });
+
   function mutate(fn) {
     fn();
     store.touch(pid);
@@ -773,6 +782,7 @@
       p.items = p.items.filter((x) => !gone.has(x.id));
       if (selectedId && gone.has(selectedId)) selectedId = null;
     });
+    if (!selectedId) closeInspector();
   }
 
   function duplicateItem(id) {    const p = proj();
@@ -1424,7 +1434,14 @@
   }
   itemsEl.addEventListener("dblclick", (e) => {
     const body = e.target.closest(".note-body");
-    if (body) enterNoteEdit(body);
+    if (body) { enterNoteEdit(body); return; }
+    // double-click a selected non-note item opens the editor popover
+    const itemEl = e.target.closest(".citem");
+    if (itemEl && itemEl.dataset.id) {
+      selectedId = itemEl.dataset.id;
+      renderAll();
+      openInspector();
+    }
   });
   // live-save while typing without rebuilding the canvas
   itemsEl.addEventListener("input", (e) => {
@@ -1773,13 +1790,15 @@
     else if (k === "c" && !e.ctrlKey && !e.metaKey) setTool("connect");
     else if (k === "w" && !e.ctrlKey && !e.metaKey) setTool("pen");
     else if (k === "x" && !e.ctrlKey && !e.metaKey) setTool("eraser");
-    else if (k === "f" && !e.ctrlKey && !e.metaKey) setFocus(!workspaceEl.classList.contains("focus"));
     else if (k === "enter" && selectedId) {
       const it = proj().items.find((x) => x.id === selectedId);
       if (it && it.type === "note") {
         const body = itemsEl.querySelector(`[data-id="${it.id}"] .note-body`);
         if (body) { e.preventDefault(); enterNoteEdit(body); return; }
       }
+      e.preventDefault();
+      openInspector();
+      return;
     }
     else if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k) && selectedId) {
       e.preventDefault();
@@ -1810,6 +1829,7 @@
       e.preventDefault();
       duplicateItem(selectedId);
     } else if (e.key === "Escape") {
+      if (dlgInspect && dlgInspect.open) { closeInspector(); return; }
       if (connFrom) { connFrom = null; renderWires(); setTool("select"); return; }
       if (selectedId) deselectOnly();
       else back();

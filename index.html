@@ -28,13 +28,11 @@
 <main id="view-dashboard" class="wrap">
   <section class="hero">
     <div>
-      <div class="sig-0" id="hero-kicker">Projects</div>
-      <h1 class="page-title"><span id="project-count">0</span> projects</h1>
-      <p class="hero-sub">Give each idea a place to live, instead of random paper.</p>
+      <div class="sig-0" id="hero-kicker">Workspace</div>
+      <h1 class="page-title">Projects</h1>
+      <p class="hero-sub"><span id="project-count">0</span> projects · <span id="hero-total-objects">0 objects</span> — give each idea a place to live.</p>
     </div>
-    <div class="hero-meta">
-      <span class="hero-stat" id="hero-total-objects">0 objects</span>
-    </div>
+    <div class="hero-meta" aria-hidden="true"></div>
   </section>
 
   <section class="controls">
@@ -67,23 +65,29 @@
   </div>
 
   <div class="toolbar" role="toolbar" aria-label="Canvas tools">
-    <button data-tool="select" aria-pressed="true" title="Select / move (V)">Select</button>
-    <button data-tool="pan" aria-pressed="false" title="Pan (H or Space-drag)">Pan</button>
-    <span class="sep"></span>
-    <button data-tool="note" aria-pressed="false" title="Add text note (N)">+ Note</button>
-    <button data-tool="image" aria-pressed="false" title="Add image (I)">+ Image</button>
-    <button data-tool="link" aria-pressed="false" title="Add link embed (L)">+ Link</button>
-    <button data-tool="pdf" aria-pressed="false" title="Add PDF (P)">+ PDF</button>
-    <button data-tool="md" aria-pressed="false" title="Add markdown (M)">+ MD</button>
-    <button data-tool="rect" aria-pressed="false" title="Add section zone (R)">+ Section</button>
-    <button data-tool="connect" aria-pressed="false" title="Connect two items with an arrow (C)">+ Connect</button>
-    <button data-tool="pen" aria-pressed="false" title="Draw freehand (W)">+ Pen</button>
-    <button data-tool="eraser" aria-pressed="false" title="Erase strokes (X)">+ Erase</button>
-    <span class="sep"></span>
-    <button id="btn-fit" class="ghost" title="Reset zoom to 100% at origin">Reset view</button>
-    <button id="btn-focus" class="ghost" title="Hide panels, canvas fills page (F)">Focus</button>
-    <button id="btn-full" class="ghost" title="Browser fullscreen on canvas">Full</button>
-    <span class="hint" id="tool-hint">Pick a + tool, then click the canvas to place it</span>
+    <div class="tool-group" role="group" aria-label="Mode">
+      <button data-tool="select" aria-pressed="true" title="Select and move (V)">Select</button>
+      <button data-tool="pan" aria-pressed="false" title="Pan the canvas (H or Space-drag)">Pan</button>
+    </div>
+    <span class="sep" aria-hidden="true"></span>
+    <div class="tool-group" role="group" aria-label="Add content">
+      <button data-tool="note" aria-pressed="false" title="Add a text note (N)">Note</button>
+      <button data-tool="image" aria-pressed="false" title="Add an image (I)">Image</button>
+      <button data-tool="link" aria-pressed="false" title="Add a link embed (L)">Link</button>
+      <button data-tool="pdf" aria-pressed="false" title="Add a PDF (P)">PDF</button>
+      <button data-tool="md" aria-pressed="false" title="Add a markdown card (M)">Markdown</button>
+      <button data-tool="rect" aria-pressed="false" title="Add a section zone (R)">Section</button>
+      <button data-tool="connect" aria-pressed="false" title="Connect two items with an arrow (C)">Connect</button>
+      <button data-tool="pen" aria-pressed="false" title="Draw freehand (W)">Draw</button>
+      <button data-tool="eraser" aria-pressed="false" title="Erase strokes (X)">Erase</button>
+    </div>
+    <span class="sep" aria-hidden="true"></span>
+    <div class="tool-group" role="group" aria-label="View">
+      <button id="btn-fit" class="ghost" title="Reset zoom to 100% at origin">Reset view</button>
+      <button id="btn-focus" class="ghost" title="Hide panels, canvas fills the page (F)">Focus</button>
+      <button id="btn-full" class="ghost" title="Show the canvas fullscreen">Fullscreen</button>
+    </div>
+    <span class="hint" id="tool-hint">Choose a tool, then click the canvas to place it</span>
   </div>
 
   <div class="workspace">
@@ -116,8 +120,17 @@
     </aside>
   </div>
 
-  <div class="canvas-hint" id="canvas-hint">Drag the background to pan · Ctrl+scroll to zoom · F for focus · Del removes the selection</div>
+  <div class="canvas-hint" id="canvas-hint">Drag the background to pan · Ctrl+scroll to zoom · Del deletes the selection</div>
   <div class="canvas-ctl" id="canvas-ctl" aria-label="Canvas position and zoom"></div>
+
+  <dialog id="dlg-inspect" aria-labelledby="dlg-inspect-title">
+    <div class="preview-bar">
+      <h3 id="dlg-inspect-title" style="margin:0;flex:1">Edit item</h3>
+      <span class="sig-0" id="dlg-inspect-kind">—</span>
+      <button id="dlg-inspect-close" class="ghost">Close</button>
+    </div>
+    <div id="inspector-host"></div>
+  </dialog>
 </main>
 
 <dialog id="dlg-project">
@@ -148,7 +161,7 @@
   <input type="text" id="link-title" placeholder="Leave empty for auto preview" maxlength="120" />
   <div class="row">
     <button id="dlg-link-cancel" class="ghost">Cancel</button>
-    <button id="dlg-link-ok" class="primary">Place</button>
+    <button id="dlg-link-ok" class="primary">Add link</button>
   </div>
 </dialog>
 
@@ -161,7 +174,7 @@
   </div>
   <div class="row">
     <button id="dlg-image-cancel" class="ghost">Cancel</button>
-    <button id="dlg-image-ok" class="primary">Place</button>
+    <button id="dlg-image-ok" class="primary">Add image</button>
   </div>
 </dialog>
 
@@ -174,7 +187,7 @@
   </div>
   <div class="row">
     <button id="dlg-pdf-cancel" class="ghost">Cancel</button>
-    <button id="dlg-pdf-ok" class="primary">Place</button>
+    <button id="dlg-pdf-ok" class="primary">Add PDF</button>
   </div>
 </dialog>
 
@@ -187,14 +200,14 @@
   </div>
   <div class="row">
     <button id="dlg-md-cancel" class="ghost">Cancel</button>
-    <button id="dlg-md-ok" class="primary">Place</button>
+    <button id="dlg-md-ok" class="primary">Add note</button>
   </div>
 </dialog>
 
 <dialog id="preview-modal">
   <div class="preview-bar">
     <code id="preview-url"></code>
-    <button id="preview-open" class="primary">Open ↗</button>
+    <button id="preview-open" class="primary">Open link</button>
     <button id="preview-close" class="ghost">Close</button>
   </div>
   <div class="sig-0" style="padding:0 2px 6px">Live embed — if blank, the site blocks framing. Use Open ↗.</div>

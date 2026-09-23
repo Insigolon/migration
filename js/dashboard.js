@@ -18,7 +18,7 @@
       p.label.toLowerCase().includes(filter.toLowerCase()));
     document.getElementById("project-count").textContent = store.data().projects.length;
     document.getElementById("hero-total-objects").textContent =
-      store.data().projects.reduce((n, p) => n + p.items.length, 0) + " objects";
+      store.data().projects.reduce((n, p) => n + p.items.length, 0) + " items";
 
     grid.innerHTML = "";
     empty.hidden = store.data().projects.length !== 0;
@@ -34,12 +34,11 @@
       sem.setAttribute("aria-label", "Open Semester Command Center");
       sem.innerHTML = `
         <div>
-          <div class="sig-0">Sem-CC · standalone page</div>
           <div class="pblock-title"></div>
-          <div class="pblock-stats">Opens here</div>
+          <div class="pblock-stats">Standalone page · opens here</div>
         </div>
         <div class="pblock-foot">
-          <span class="pblock-enter">Open →</span>
+          <span class="pblock-enter">Open</span>
         </div>`;
       sem.querySelector(".pblock-title").textContent = "Semester Command Center";
       const go = () => { window.location.href = "/Sem-CC/"; };
@@ -58,12 +57,11 @@
       el.setAttribute("aria-label", "Enter project " + p.label);
       el.innerHTML = `
         <div>
-          <div class="sig-0">Updated ${fmtDate(p.updatedAt)}</div>
           <div class="pblock-title"></div>
-          <div class="pblock-stats">${p.items.length} objects</div>
+          <div class="pblock-stats">${p.items.length} items · Updated ${fmtDate(p.updatedAt)}</div>
         </div>
         <div class="pblock-foot">
-          <span class="pblock-enter">Open →</span>
+          <span class="pblock-enter">Open</span>
           <span class="pblock-actions">
             <button data-act="rename" title="Rename">Rename</button>
             <button data-act="del" title="Delete">Delete</button>
@@ -74,7 +72,7 @@
         const act = e.target.closest("[data-act]");
         if (act) {
           e.stopPropagation();
-          if (act.dataset.act === "del" && confirm(`Delete "${p.label}" and its ${p.items.length} objects?`)) {
+          if (act.dataset.act === "del" && confirm(`Delete "${p.label}" and its ${p.items.length} items?`)) {
             store.deleteProject(p.id);
             render();
           } else if (act.dataset.act === "rename") {
@@ -104,7 +102,7 @@
   document.getElementById("dlg-project-cancel").addEventListener("click", () => dlg.close());
   document.getElementById("dlg-project-ok").addEventListener("click", () => {
     const v = labelInput.value.trim();
-    if (!v) { signalToast("LABEL REQUIRED"); return; }
+    if (!v) { signalToast("Enter a project name to continue"); return; }
     if (editingId) store.renameProject(editingId, v);
     else {
       const p = store.createProject(v);

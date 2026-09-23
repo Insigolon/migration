@@ -20,8 +20,8 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-lg);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .topbar-right button {
   height: 36px;
@@ -29,17 +29,20 @@
 
 .wrap { max-width: 960px; margin: 0 auto; padding: 0 var(--space-6) var(--space-16); }
 
-/* Page title — kicker + statement */
+/* Page title — quiet statement, not a stat hero. The count lives
+   in the subtitle where it reads as a sentence. */
 .hero {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-10) 0 var(--space-6);
+  padding: var(--space-10) 0 var(--space-4);
 }
 .page-title {
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
+  font-weight: 600;
   margin: var(--space-2) 0 0;
+  letter-spacing: 0;
 }
 .hero-sub {
   margin: var(--space-2) 0 0;
@@ -61,7 +64,8 @@
 .controls .search { max-width: 340px; }
 .controls .spacer { flex: 1; }
 
-/* Project rows — table-like, hover raises */
+/* Project rows — one line of title, one line of secondary meta.
+   Tertiary is decorative only: never the sole carrier of meaning. */
 .pgrid {
   display: flex;
   flex-direction: column;
@@ -69,10 +73,10 @@
 .pblock {
   background: transparent;
   border-bottom: 1px solid var(--border-subtle);
-  padding: var(--space-5) var(--space-2);
+  padding: var(--space-4) var(--space-2);
   display: flex;
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   cursor: pointer;
@@ -81,24 +85,27 @@
 }
 .pgrid > .pblock:first-child { border-top: 1px solid var(--border-subtle); }
 .pblock:hover { background: var(--bg-surface-raised); }
+.pblock:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .pblock-title {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0;
   word-break: break-word;
+  line-height: var(--leading-ui);
 }
 .pblock-stats {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
-  margin-top: var(--space-1);
+  margin-top: 2px;
 }
 .pblock-foot { display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; }
 .pblock-enter {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-size: var(--text-sm);
   font-weight: 500;
+  white-space: nowrap;
 }
 .pblock:hover .pblock-enter { color: var(--accent); }
 .pblock-actions { display: flex; gap: var(--space-1); }
