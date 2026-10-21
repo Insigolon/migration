@@ -120,5 +120,17 @@
   window.addEventListener("signal:data", render);
   store.onChange(() => render());
 
-  render();
+  /* First paint keeps the static skeleton rows from index.html until the
+     store finishes its boot pull (signal:ready). Fallbacks so skeletons
+     can never stick: signal:data, store changes, and a timeout. */
+  let booted = false;
+  function bootRender() {
+    if (booted) return;
+    booted = true;
+    render();
+  }
+  window.addEventListener("signal:ready", bootRender);
+  setTimeout(bootRender, 2000);
+  // if the store script already booted before we subscribed, render now
+  if (window.SignalStore && window.SignalStore.serverOk()) bootRender();
 })();

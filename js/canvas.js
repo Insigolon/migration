@@ -23,7 +23,7 @@
   /* FigJam — sticky tints + wire (connector/stroke) helpers. Stroke colors
      are the bright variants so 2–3px lines stay legible on dark. */
   const TINTS = ["", "amber", "sage", "dusty", "clay"];
-  const TINT_STROKE = { "": "#ff8a2b", amber: "#ffa159", sage: "#3ddc84", dusty: "#5ab0ff", clay: "#ff5c5c" };
+  const TINT_STROKE = { "": "#ffffff", amber: "#ffa159", sage: "#3ddc84", dusty: "#5ab0ff", clay: "#ff5c5c" };
   const wireColor = (it) => TINT_STROKE[it && it.color] || TINT_STROKE[""];
   const wireWidth = (it, fallback) => {
     const w = Number(it && it.width);
@@ -418,16 +418,23 @@
         nb.textContent = it.text || "";
         if (it.color) nb.dataset.tint = it.color;
       } else if (it.type === "image") {
-        el.innerHTML = `<img class="img-body" alt="" draggable="false"/><div class="resize"></div>`;
+        el.innerHTML = `<img class="img-body loading" alt="" draggable="false"/><div class="resize"></div>`;
         const img = el.querySelector("img");
         img.src = it.src || "";
+        img.onload = () => { img.classList.remove("loading"); };
         img.onerror = () => { img.style.display = "none"; };
+        // guard: never leave shimmer stuck if events don't fire
+        setTimeout(() => { img.classList.remove("loading"); }, 10000);
       } else if (it.type === "pdf") {
         const viewUrl = embeds.pdfViewUrl ? embeds.pdfViewUrl(it.id, it.src) : (it.src || "");
         const sizeLbl = embeds.pdfSizeLabel ? embeds.pdfSizeLabel(it.src, it.size) : "";
-        el.innerHTML = `<div class="pdf-card"><embed class="pdf-body" type="application/pdf"/><div class="pdf-fallback">PREVIEW UNAVAILABLE — USE OPEN ↗ OR SAVE ⤓</div><div class="pdf-bar"><span class="pdf-nm"></span><button data-pdf="open">OPEN ↗</button><button data-pdf="save">SAVE ⤓</button></div></div><div class="resize"></div>`;
-        if (viewUrl) el.querySelector("embed").src = viewUrl;
-        else el.querySelector("embed").style.display = "none";
+        el.innerHTML = `<div class="pdf-card"><embed class="pdf-body loading" type="application/pdf"/><div class="pdf-fallback">PREVIEW UNAVAILABLE — USE OPEN ↗ OR SAVE ⤓</div><div class="pdf-bar"><span class="pdf-nm"></span><button data-pdf="open">OPEN ↗</button><button data-pdf="save">SAVE ⤓</button></div></div><div class="resize"></div>`;
+        const pdfEmbed = el.querySelector("embed");
+        pdfEmbed.addEventListener("load", () => { pdfEmbed.classList.remove("loading"); }, { once: true });
+        // guard: embed load events are unreliable — never shimmer forever
+        setTimeout(() => { pdfEmbed.classList.remove("loading"); }, 10000);
+        if (viewUrl) pdfEmbed.src = viewUrl;
+        else { pdfEmbed.style.display = "none"; }
         el.querySelector(".pdf-nm").textContent = (it.name || "PDF") + (sizeLbl ? " · " + sizeLbl : "");
         el.dataset.pdfKey = String((it.src || "").length) + "|" + (it.name || "");
       } else if (it.type === "md") {
@@ -442,14 +449,24 @@
         const fav = embeds.faviconOf ? embeds.faviconOf(it.url || "") : "";
         el.innerHTML = `
           <div class="link-card ${failed ? "failed" : ""} ${loading ? "loading" : ""}">
-            ${it.image ? `<img alt="" draggable="false" src="${esc(it.image)}"/>` : ""}
+            ${loading ? `<div class="skel-img skel" aria-hidden="true"></div>
+            <div class="skel-lines skel" aria-hidden="true">
+              <div class="skel-bar w80"></div>
+              <div class="skel-bar w60"></div>
+              <div class="skel-bar short"></div>
+              <div class="skel-bar short w60"></div>
+            </div>` : `${it.image ? `<img alt="" draggable="false" src="${esc(it.image)}"/>` : ""}
             <div class="lk-t"></div>
-            <div class="lk-d"></div>
+            <div class="lk-d"></div>`}
             <div class="lk-dom">${fav ? `<img alt="" draggable="false" src="${esc(fav)}"/>` : ""}<code></code></div>
             <div class="lk-f">${failed ? `<button data-lk="retry" class="lk-retry">RETRY</button>` : `<button data-lk="preview">PREVIEW</button>`}<button data-lk="open">OPEN ↗</button></div>
           </div><div class="resize"></div>`;
-        el.querySelector(".lk-t").textContent = loading ? "FETCHING PREVIEW…" : (it.title || it.url);
-        el.querySelector(".lk-d").textContent = failed ? "PREVIEW FAILED — RETRY OR OPEN EXTERNALLY" : (it.description || "");
+        if (loading) {
+          el.querySelector(".link-card").setAttribute("aria-label", "Loading link preview");
+        } else {
+          el.querySelector(".lk-t").textContent = it.title || it.url;
+          el.querySelector(".lk-d").textContent = failed ? "PREVIEW FAILED — RETRY OR OPEN EXTERNALLY" : (it.description || "");
+        }
         el.querySelector(".lk-dom code").textContent = embeds.domainOf(it.url || "");
         el.querySelectorAll(".link-card > img").forEach((img) => { img.onerror = () => img.remove(); });
         const favImg = el.querySelector(".lk-dom img");

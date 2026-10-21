@@ -101,6 +101,12 @@
   margin-top: 2px;
 }
 .pblock-foot { display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; }
+/* Dashboard skeletons — static first-paint placeholders in the same
+   .pblock shape; bars come from the shared .skel family in canvas.css.
+   dashboard.js replaces them the moment the store is ready. */
+.pblock.skel { cursor: default; align-items: center; }
+.pblock.skel:hover { background: transparent; }
+.pblock.skel .skel-lines { flex: 1; padding: 0; }
 .pblock-enter {
   color: var(--text-secondary);
   font-size: var(--text-sm);

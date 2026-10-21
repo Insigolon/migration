@@ -16,10 +16,10 @@
   --text-secondary: #9aa0a6;
   --text-tertiary: #6b7076;
 
-  /* Accent — the one signal color, used sparingly */
-  --accent: #ff8a2b;
-  --accent-hover: #ffa159;
-  --accent-muted: rgba(255, 138, 43, 0.14);
+  /* Accent — monochrome signal, used sparingly */
+  --accent: #ffffff;
+  --accent-hover: #e2e4e7;
+  --accent-muted: rgba(255, 255, 255, 0.14);
 
   /* Status */
   --status-success: #3ddc84;
@@ -198,6 +198,8 @@ button.secondary {
 button.secondary:hover { border-color: var(--text-secondary); }
 
 button:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Pressed state reads via tint only: white text on the grey tint,
+   no outline. */
 button[aria-pressed="true"] {
   background: var(--accent-muted);
   border-color: transparent;

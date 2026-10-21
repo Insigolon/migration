@@ -123,7 +123,12 @@
     t = setTimeout(pushToServer, 500);
   }
 
-  // boot: pull server copy if newer; push local seed up if server empty
+  // boot: pull server copy if newer; push local seed up if server empty.
+  // Always ends with signal:ready so first paint can swap skeletons
+  // for real rows (dashboard listens; a timeout there is the backstop).
+  function bootReady() {
+    window.dispatchEvent(new CustomEvent("signal:ready"));
+  }
   (async function pullOnBoot() {
     try {
       const res = await fetch(API, { headers: { "Accept": "application/json" } });
@@ -146,6 +151,8 @@
     } catch (e) {
       serverOk = false;
       setSaveState("Local only");
+    } finally {
+      bootReady();
     }
   })();
 
